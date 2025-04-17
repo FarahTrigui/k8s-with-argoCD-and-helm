@@ -23,7 +23,7 @@ pipeline {
         HELM_CHART_PATH = './springboot-app'
         
         // SonarQube configuration
-        SONAR_SERVER = 'SonarQube'
+        SONAR_SERVER = 'sonar-token'
         
         // ArgoCD configuration
         ARGOCD_SERVER = 'localhost:8090'
@@ -41,14 +41,14 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building the application with Maven...'
-                sh 'mvn clean compile'
+                sh 'cd spring-boot-app && mvn clean compile'
             }
         }
         
         stage('Unit Tests') {
             steps {
                 echo 'Running unit tests...'
-                sh 'mvn test'
+                sh ' cd spring-boot-app && mvn test'
             }
             post {
                 always {
@@ -61,7 +61,7 @@ pipeline {
             steps {
                 echo 'Running SonarQube analysis...'
                 withSonarQubeEnv(SONAR_SERVER) {
-                    sh 'mvn sonar:sonar'
+                    sh 'cd spring-boot-app && mvn sonar:sonar'
                 }
                 timeout(time: 10, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
@@ -72,7 +72,7 @@ pipeline {
         stage('Package') {
             steps {
                 echo 'Packaging the application...'
-                sh 'mvn package -DskipTests'
+                sh 'cd spring-boot-app && mvn package -DskipTests'
                 archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
@@ -82,7 +82,7 @@ pipeline {
                 echo 'Building and pushing Docker image...'
                 withCredentials([usernamePassword(credentialsId: DOCKER_CREDS, passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                     sh '''
-                        docker build -t ${DOCKER_REGISTRY}/${DOCKER_REPO}:${VERSION} .
+                       cd spring-boot-app &&  docker build -t ${DOCKER_REGISTRY}/${DOCKER_REPO}:${VERSION} .
                         docker tag ${DOCKER_REGISTRY}/${DOCKER_REPO}:${VERSION} ${DOCKER_REGISTRY}/${DOCKER_REPO}:latest
                         echo ${DOCKER_PASSWORD} | docker login ${DOCKER_REGISTRY} -u ${DOCKER_USERNAME} --password-stdin
                         docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}:${VERSION}
