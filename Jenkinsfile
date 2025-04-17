@@ -20,13 +20,13 @@ pipeline {
         KUBECONFIG = credentials('kubernetes')
         
         // Helm chart path
-        HELM_CHART_PATH = './k8s/helm/springboot-app'
+        HELM_CHART_PATH = './springboot-app'
         
         // SonarQube configuration
         SONAR_SERVER = 'SonarQube'
         
         // ArgoCD configuration
-        ARGOCD_SERVER = 'argocd-server.argocd.svc.cluster.local'
+        ARGOCD_SERVER = 'localhost:8090'
         ARGOCD_CREDS = 'argocd-credentials-id'
     }
     
