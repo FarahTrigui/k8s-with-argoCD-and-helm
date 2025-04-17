@@ -68,7 +68,6 @@ pipeline {
             steps {
                 echo 'Packaging the application...'
                 sh 'cd spring-boot-app && mvn package -DskipTests'
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
         
