@@ -50,11 +50,6 @@ pipeline {
                 echo 'Running unit tests...'
                 sh ' cd spring-boot-app && mvn test -B || true '
             }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
-            }
         }
         
         stage('SonarQube Analysis') {
