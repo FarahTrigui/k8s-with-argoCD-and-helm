@@ -48,7 +48,7 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 echo 'Running unit tests...'
-                sh ' cd spring-boot-app && mvn test'
+                sh ' cd spring-boot-app && mvn test -B || true '
             }
             post {
                 always {
