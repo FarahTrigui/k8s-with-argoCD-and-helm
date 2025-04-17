@@ -23,7 +23,7 @@ pipeline {
         HELM_CHART_PATH = './'
         
         // SonarQube configuration
-        SONAR_SERVER = 'sonar-token'
+        SONAR_SERVER = 'sonar-server'
         
         // ArgoCD configuration
         ARGOCD_SERVER = 'localhost:8090'
