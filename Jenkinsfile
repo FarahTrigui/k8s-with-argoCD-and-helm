@@ -20,7 +20,7 @@ pipeline {
         KUBECONFIG = credentials('kubernetes')
         
         // Helm chart path
-        HELM_CHART_PATH = './springboot-app'
+        HELM_CHART_PATH = './'
         
         // SonarQube configuration
         SONAR_SERVER = 'sonar-token'
