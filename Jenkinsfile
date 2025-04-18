@@ -27,7 +27,6 @@ pipeline {
         
         // ArgoCD configuration
         ARGOCD_SERVER = 'localhost:8090'
-        ARGOCD_CREDS = 'argocd-credentials-id'
     }
     
     stages {
@@ -109,68 +108,26 @@ pipeline {
             }
         }
         
-        stage('User Acceptance Tests') {
-            steps {
-                echo 'Running UAT on deployed application...'
-                sh '''
-                    export KUBECONFIG=${KUBECONFIG}
-                    
-                    # Get the service URL
-                    export SERVICE_URL=$(kubectl get svc -n test ${APP_NAME}-test -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-                    
-                    # Wait for the application to be ready
-                    for i in {1..30}; do
-                        statusCode=$(curl -s -o /dev/null -w "%{http_code}" http://${SERVICE_URL}/actuator/health || echo "000")
-                        if [ "$statusCode" = "200" ]; then
-                            echo "Application is up and running"
-                            break
-                        fi
-                        echo "Waiting for application to be ready... ($i/30)"
-                        sleep 10
-                    done
-                    
-                    # Run your UAT tests
-                    # This could be a separate test suite or API tests
-                    mvn verify -Pintegration-test -Dtest.host=${SERVICE_URL}
-                '''
-            }
-        }
-        
-        stage('Promote to Production with ArgoCD') {
-            steps {
-                echo 'Promoting application to production using ArgoCD...'
-                withCredentials([usernamePassword(credentialsId: ARGOCD_CREDS, passwordVariable: 'ARGOCD_PASSWORD', usernameVariable: 'ARGOCD_USERNAME')]) {
-                    sh '''
-                        # Install ArgoCD CLI if not available
-                        if ! command -v argocd &> /dev/null; then
-                            curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
-                            chmod +x /usr/local/bin/argocd
-                        fi
-                        
-                        # Update the Git repository with the new version
-                        git config --global user.email "jenkins@example.com"
-                        git config --global user.name "Jenkins Pipeline"
-                        
-                        # Update the image tag in values-prod.yaml or create a new version-specific values file
-                        sed -i "s|tag:.*|tag: ${VERSION}|g" ${HELM_CHART_PATH}/values-prod.yaml
-                        
-                        # Commit and push changes
-                        git add ${HELM_CHART_PATH}/values-prod.yaml
-                        git commit -m "Update application version to ${VERSION} for production deployment"
-                        git push origin HEAD:main
-                        
-                        # Login to ArgoCD
-                        argocd login ${ARGOCD_SERVER} --username ${ARGOCD_USERNAME} --password ${ARGOCD_PASSWORD} --insecure
-                        
-                        # Sync the ArgoCD application
-                        argocd app sync ${APP_NAME}-prod
-                        
-                        # Wait for the sync to complete
-                        argocd app wait ${APP_NAME}-prod --health --timeout 300
-                    '''
-                }
-            }
-        }
+       stage('Bump Chart Version') {
+        steps {
+    withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+      sh '''
+        git config user.email "farahtrigui5@gmail.com"
+        git config user.name  "FarahTrigui"
+
+        # Replace the tag
+        sed -i "s/tag: \\".*\\"/tag: \\"${BUILD_NUMBER}\\"/g" values.yaml
+
+        # Git commit & push using credentials
+        git add values.yaml
+        git commit -m "ci: bump image.tag to ${BUILD_NUMBER}"
+
+        git push https://${GIT_USER}:${GIT_TOKEN}@github.com/${GIT_USER}/k8s-with-argoCD-and-helm.git HEAD:main
+      '''
+    }
+  }
+}
+                   
     }
     
     post {
