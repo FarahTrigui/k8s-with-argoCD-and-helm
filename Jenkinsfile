@@ -17,7 +17,7 @@ pipeline {
         DOCKER_CREDS = 'docker'
         
         // Kubernetes config
-        KUBECONFIG = credentials('kubernetes')
+        KUBECONFIG = '/var/lib/jenkins/.kube/config'
         
         // Helm chart path
         HELM_CHART_PATH = './'
