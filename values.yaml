@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: docker.io/fifia/springboot-app
-  tag: 18
+  tag: 19
   pullPolicy: Always
 
 service:
